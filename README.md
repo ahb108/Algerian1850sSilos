@@ -10,7 +10,7 @@ The repository is organised as follows:
   -  `./scripts` ... contains R scripts for executing data preprocessing and core analyses
 
 ## Software
-All data processing and analysis was conducted in R (version 4.1.2), on MacOS 12.2.1 (x86_64-apple-darwin17.0 64-bit), with the MASS (7.3-55), lme4 (1.1-29), terra (1.5-21), sf (1.0-7) and ape (5.6-2) packages.  
+All data processing and analysis was conducted in R (version 4.2.2), on MacOS 13.0 (aarch64-apple-darwin20 64-bit), with the MASS (7.3-60), lme4 (1.1-33), terra (1.5-21), sf (1.0-12), rstanarm (2.21.4) and ape (5.7-1) packages.
   
 ## Primary Datasets
 The primary datasets are stored as tab-delimited files in `./data/raw` and have been transcribed from documents in the Archives Nationales d'Outre-Mer (ANOM, Aix-en-Provence, France). Further details on the bibliographic and archival sources are provided in the main text and in the datasets themselves.
