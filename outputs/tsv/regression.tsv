@@ -1,0 +1,13 @@
+"Variable"	"Estimate"	"Std.Error"	"DF"	"p"
+"(Intercept)"	-0.827	0.716	378	0.249017
+"NA"				
+"AnnPrec"	-3.982	1.043	19	0.001161
+"LivestockPP"	1.602	0.697	83	0.024063
+"SaharaMarkets"	1.573	0.508	83	0.0027
+"TentProp"	-1.297	0.724	83	0.076859
+"CamelSheepProp"	-0.849	0.617	83	0.172319
+"CalcThick"	0.819	0.606	19	0.192955
+"Makhzen"	-0.799	0.458	19	0.097009
+"WeeklyMarkets"	-0.714	0.533	83	0.183592
+"WealthPP"	0.237	0.59	83	0.68917
+"HaCultPP"	0.135	0.627	83	0.829851
