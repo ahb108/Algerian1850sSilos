@@ -39,7 +39,7 @@ tenv <- tenv[,c("TribeID","AnnPrec","CalcThick")]
 fractions <- merge(fractions, tenv, by="TribeID", all.x=TRUE)
 
 ## Output container
-mycols <- c("FractionID", "TribalFraction", "TribeID", "Tribe", "SiloCount1853", "SiloCount1854", "TotalPop", "Makhzen", "Berber", "HaCultPP", "WealthPP", "LWealthPP", "LWealthProp", "LivestockPP", "CamelSheepProp", "TentProp", "SaharaMarkets", "WeeklyMarkets", "AnnPrec", "CalcThick", "Longitude", "Latitude", "LocQual", "LonPlot",  "LatPlot","SubRegion","Comments")
+mycols <- c("FractionID", "TribalFraction", "TribeID", "Tribe", "SiloCount1853", "SiloCount1854", "TotalPop", "Makhzen", "Marabout", "Berber", "HaCultPP", "WealthPP", "LWealthPP", "LWealthProp", "LivestockPP", "CamelSheepProp", "TentProp", "SaharaMarkets", "WeeklyMarkets", "AnnPrec", "CalcThick", "Longitude", "Latitude", "LocQual", "LonPlot",  "LatPlot","SubRegion","Comments")
 fractioninfo <- as.data.frame(matrix(ncol=length(mycols), nrow=length(myfractions)), stringsAsFactors=FALSE)
 names(fractioninfo) <- mycols
 fractioninfo$FractionID <- myfractions
@@ -105,6 +105,7 @@ for (a in 1:nrow(fractioninfo)){
     fractioninfo[a,"TribalFraction"] <- fractions[fractions$FractionID==fractioninfo$FractionID[a],"TribalFraction"]
     fractioninfo[a,"Tribe"] <- fractions[fractions$FractionID==fractioninfo$FractionID[a],"Tribe"]
     fractioninfo[a,"Makhzen"] <- fractions[fractions$FractionID==fractioninfo$FractionID[a],"Makhzen"]
+    fractioninfo[a,"Marabout"] <- fractions[fractions$FractionID==fractioninfo$FractionID[a],"Marabout"]
     fractioninfo[a,"Berber"] <- fractions[fractions$FractionID==fractioninfo$FractionID[a],"Berber"]
     fractioninfo[a,"AnnPrec"] <- fractions[fractions$FractionID==fractioninfo$FractionID[a],"AnnPrec"]
     fractioninfo[a,"CalcThick"] <- fractions[fractions$FractionID==fractioninfo$FractionID[a],"CalcThick"]

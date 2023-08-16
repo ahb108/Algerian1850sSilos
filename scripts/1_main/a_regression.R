@@ -12,7 +12,8 @@ fractioninfo <- read.table("data/postprep/tsv/fractions_variables.tsv", header=T
 ## Log-transform those variables with particularly skewed distributions and rescale all covariates to [0,1]
 sfinfo <- fractioninfo
 resc <- function(x){ (x-min(x))/(max(x) - min(x))}
-torescale <- c("Makhzen","Berber","HaCultPP","WealthPP","LivestockPP","CamelSheepProp","TentProp","SaharaMarkets","WeeklyMarkets","AnnPrec","CalcThick","Longitude","Latitude")
+torescale <- c("TotalPop","Makhzen","Marabout","Berber","HaCultPP","WealthPP","LivestockPP","CamelSheepProp","TentProp","SaharaMarkets","WeeklyMarkets","AnnPrec","CalcThick","Longitude","Latitude")
+sfinfo$TotalPop <- log(sfinfo$TotalPop)
 sfinfo$SaharaMarkets <- log(sfinfo$SaharaMarkets+0.01)
 sfinfo$WealthPP <- log(sfinfo$WealthPP)
 sfinfo$LivestockPP <- log(sfinfo$LivestockPP)
@@ -22,24 +23,26 @@ for (a in 1:length(torescale)){
 }
 summary(sfinfo)
 ## Export the covariate correlation table
-predcors <- round(cor(sfinfo[!is.na(sfinfo$SiloCount1853),7:18]),3)
+predcors <- round(cor(sfinfo[!is.na(sfinfo$SiloCount1853),7:19]),3)
 diag(predcors) <- NA
 predcors[upper.tri(predcors)] <- NA
-predcors <- predcors[,-ncol(predcors)]
-write.table(predcors, file="outputs/tsv/covariate_correlations.tsv", sep="\t", dec=".", row.names=TRUE, na="")
+predcors <- as.data.frame(predcors)
+predcors <- cbind(row.names(predcors),predcors)
+names(predcors)[1] <- "Covariates"
+write.table(predcors, file="outputs/tsv/covariate_correlations.tsv", sep="\t", dec=".", row.names=FALSE, na="")
 
 ## Load silos sites 
 silos <- read.table("data/raw/tsv/fractions_silos.tsv", header=TRUE, stringsAsFactors=FALSE, encoding="UTF-8",na.strings=c("NA",""),strip.white=TRUE, sep="\t", dec=".")
 silos <- silos[silos$Year %in% c(1853,1854),]
 silos <- silos[silos$FractionID %in% unique(fractioninfo$FractionID),]
 silos <- silos[!is.na(silos$SiloCount),]
-silosinfo <- merge(silos[,c("Year","FractionID","PlaceName","SiteID","SiloCount")], sfinfo[,c("FractionID","TribeID","TotalPop","Makhzen","Berber","HaCultPP","WealthPP","LivestockPP","CamelSheepProp","TentProp","SaharaMarkets","WeeklyMarkets","AnnPrec","CalcThick")], by="FractionID")
+silosinfo <- merge(silos[,c("Year","FractionID","PlaceName","SiteID","SiloCount")], sfinfo[,c("FractionID","TribeID","TotalPop","Makhzen","Marabout","Berber","HaCultPP","WealthPP","LivestockPP","CamelSheepProp","TentProp","SaharaMarkets","WeeklyMarkets","AnnPrec","CalcThick")], by="FractionID")
 
 ############################################################ 
 
 ## 1853 ##
 ## Poisson
-mod1 <- glmer(SiloCount ~ offset(log(TotalPop)) + Makhzen + Berber + HaCultPP + WealthPP + LivestockPP + CamelSheepProp + TentProp + SaharaMarkets + WeeklyMarkets + AnnPrec + CalcThick + (1|TribeID/FractionID), data=silosinfo[silosinfo$Year==1853,], family="poisson", control=glmerControl(optimizer="bobyqa"))
+mod1 <- glmer(SiloCount ~ TotalPop + Makhzen + Marabout + Berber + HaCultPP + WealthPP + LivestockPP + CamelSheepProp + TentProp + SaharaMarkets + WeeklyMarkets + AnnPrec + CalcThick + (1|TribeID/FractionID), data=silosinfo[silosinfo$Year==1853,], family="poisson", control=glmerControl(optimizer="bobyqa"))
 summary(mod1)
 ## Overdispersion
 rdf <- df.residual(mod1)
@@ -47,21 +50,23 @@ Pearson.chisq <- sum(residuals(mod1,type="pearson")^2)
 od1 <- c(chisq=Pearson.chisq,ratio=Pearson.chisq/rdf,rdf=rdf,p=pchisq(Pearson.chisq, df=rdf, lower.tail=FALSE))
 print(od1)
 ## Quasi-poisson
-mod2 <- glmmPQL(SiloCount ~ offset(log(TotalPop)) + Makhzen + Berber + HaCultPP + WealthPP + LivestockPP + CamelSheepProp + TentProp + SaharaMarkets + WeeklyMarkets + AnnPrec + CalcThick, random= ~1 | TribeID/FractionID, family=quasipoisson(link="log"), data=silosinfo[silosinfo$Year==1853,])
+mod2 <- glmmPQL(SiloCount ~ TotalPop + Makhzen + Marabout + Berber + HaCultPP + WealthPP + LivestockPP + CamelSheepProp + TentProp + SaharaMarkets + WeeklyMarkets + AnnPrec + CalcThick, random= ~1 | TribeID/FractionID, family=quasipoisson(link="log"), data=silosinfo[silosinfo$Year==1853,])
 summary(mod2)
 ## Negative binomial
-mod3 <- glmer.nb(SiloCount ~ offset(log(TotalPop)) + Makhzen + Berber + HaCultPP + WealthPP + LivestockPP + CamelSheepProp + TentProp + SaharaMarkets + WeeklyMarkets + AnnPrec + CalcThick+(1 | TribeID/FractionID), data=silosinfo[silosinfo$Year==1853,], control=glmerControl(optimizer="bobyqa"))
+mod3 <- glmer.nb(SiloCount ~ TotalPop + Makhzen + Marabout + Berber + HaCultPP + WealthPP + LivestockPP + CamelSheepProp + TentProp + SaharaMarkets + WeeklyMarkets + AnnPrec + CalcThick + (1 | TribeID/FractionID), data=silosinfo[silosinfo$Year==1853,], control=glmerControl(optimizer="bobyqa"))
 summary(mod3)
 ## Negative binomial via Bayesian inference
-mod3stan <- stan_glmer(SiloCount ~ offset(log(TotalPop)) + Makhzen + Berber + HaCultPP + WealthPP + LivestockPP + CamelSheepProp + TentProp + SaharaMarkets + WeeklyMarkets + AnnPrec + CalcThick+(1 | TribeID/FractionID), data=silosinfo[silosinfo$Year==1853,], family=neg_binomial_2(link="log"), seed=123)
-summary(mod3stan)
+mod3stan <- stan_glmer(SiloCount ~ TotalPop + Makhzen + Marabout + Berber + HaCultPP + WealthPP + LivestockPP + CamelSheepProp + TentProp + SaharaMarkets + WeeklyMarkets + AnnPrec + CalcThick+(1 | TribeID/FractionID), data=silosinfo[silosinfo$Year==1853,], family=neg_binomial_2(link="log"), seed=123)
+mod3stan
 
 ## 1854 ##
-## Quasi-poisson
-mod2a <- glmmPQL(SiloCount ~ offset(log(TotalPop)) + Makhzen + Berber + HaCultPP + WealthPP + LivestockPP + CamelSheepProp + TentProp + SaharaMarkets + WeeklyMarkets + AnnPrec + CalcThick, random= ~1 | TribeID/FractionID, family=quasipoisson(link="log"), data=silosinfo[silosinfo$Year==1853,])
-summary(mod2a)
-mod2b <- glmmPQL(SiloCount ~ offset(log(TotalPop)) + Makhzen + Berber + HaCultPP + WealthPP + LivestockPP + CamelSheepProp + TentProp + SaharaMarkets + WeeklyMarkets + AnnPrec + CalcThick, random= ~1 | TribeID/FractionID, family=quasipoisson(link="log"), data=silosinfo[silosinfo$Year==1853 & !silosinfo$SiteID==226,])
-summary(mod2b) ## Dropping unusual site as possible typo
+## Negative binomial
+mod3a <- glmer.nb(SiloCount ~ TotalPop + Makhzen + Marabout + Berber + HaCultPP + WealthPP + LivestockPP + CamelSheepProp + TentProp + SaharaMarkets + WeeklyMarkets + AnnPrec + CalcThick + (1 | TribeID/FractionID), data=silosinfo[silosinfo$Year==1854,], control=glmerControl(optimizer="bobyqa"))
+summary(mod3a)
+## Does not converge.
+## Negative binomial via Bayesian inference
+mod3astan <- stan_glmer(SiloCount ~ TotalPop + Makhzen + Marabout + Berber + HaCultPP + WealthPP + LivestockPP + CamelSheepProp + TentProp + SaharaMarkets + WeeklyMarkets + AnnPrec + CalcThick+(1 | TribeID/FractionID), data=silosinfo[silosinfo$Year==1854,], family=neg_binomial_2(link="log"), seed=123)
+mod3astan
 
 ## Assessment of quasi-Poisson vs Negative Binomial models (see Ver Hoef and Boveng 2007)
 ## quasi-Poisson
@@ -110,17 +115,15 @@ points(b3means,b3vars,col="red")
 points(b3means,b3vars,type="l",col="red")
 legend(10, 40000,c("quasi-Poisson","negative binomial"),col=c("blue","red"),pch=1,lty=1, bty="n", title="", title.font=2)
 
-## Prioritise the Quasi-poisson regression result from 1853 for the main text and export it.
-coefdf <- as.data.frame(coef(summary(mod2)))
-coefdf$`t-value` <- NULL
-coefdf$`p-value` <- round(coefdf$`p-value`,6)
-coefdf$Value <- round(coefdf$Value,3)
-coefdf$Std.Error <- round(coefdf$Std.Error,3)
-coefdf <- coefdf[with(coefdf, order(-abs(Value))), ]
-coefdf <- rbind(coefdf["(Intercept)",], coefdf["log(TotalPop)",], coefdf[!(row.names(coefdf) %in% c("(Intercept)","log(TotalPop)")),])
+## Prioritise the negative binomial regression result from 1853 for the main text and export it.
+coefdf <- as.data.frame(coef(summary(mod3)))
+coefdf[,"z value"] <- NULL
 coefdf <- cbind(row.names(coefdf), coefdf)
-names(coefdf) <- c("Variable", "Estimate","Std.Error","DF","p")
 rownames(coefdf) <- NULL
+names(coefdf) <- c("Variable", "Estimate","Std.Error","p")
+coefdf$Estimate <- round(coefdf$Estimate, 3)
+coefdf$Std.Error <- round(coefdf$Std.Error, 3)
+coefdf$p <- round(coefdf$p, 3)
 coefdf
 ## Write out
 write.table(coefdf, file="outputs/tsv/regression.tsv", sep="\t", dec=".", row.names=FALSE, na="")
